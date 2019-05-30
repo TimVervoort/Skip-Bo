@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Skip-Bo</title>
+        <style type="text/css">
+
+            /* General */
+            @font-face {
+                font-family: 'Lithos';
+                src: url('Lithos_Pro_Black.ttf')  format('truetype');
+            }
+            html, body {
+                height: 100%;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                background-color: #efefef;
+                font-family: 'Lithos', sans-serif;
+            }
+
+            /* Cards */
+            .card {
+                float: none;
+                position: relative;
+                width: 180px;
+                height: 270px;
+                background-color: #fff;
+                border-radius: 10px;
+                box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+                font-size: 100px;
+                text-align: center;
+                line-height: 270px;  
+                box-sizing: border-box;
+                border: 10px solid #fff;         
+            }
+            .cwildcard {
+                font-size: 30px;
+            }
+            .card::after, .card::before {
+                display: block;
+                position: absolute;
+                width: 0;
+                height: 0;
+                border-style: solid;
+                content: ' ';
+            }
+            .card::after {
+                top: 0;
+                right: 0;
+                border-width: 0 2cm 3cm 0;
+            }
+            .card::before {
+                bottom: 0;
+                left: 0;
+                border-width: 3cm 0 0 2cm;               
+            }
+            .cwildcard::after, .cwildcard::before {
+                border-width: 0;
+            }
+            .c1, .c2, .c3, .c4 {
+                color: #2C2D7F;
+            }
+            .c1::after, .c2::after, .c3::after, .c4::after {
+                border-color: transparent #2C2D7F transparent transparent;
+            }
+            .c1::before, .c2::before, .c3::before, .c4::before {
+                border-color: transparent transparent transparent #2C2D7F;
+            }
+            .c5, .c6, .c7, .c8 {
+                color: #8ECF4F;
+            }
+            .c5::after, .c6::after, .c7::after, .c8::after {
+                border-color: transparent #8ECF4F transparent transparent;
+            }
+            .c5::before, .c6::before, .c7::before, .c8::before {
+                border-color: transparent transparent transparent #8ECF4F;
+            }
+            .c9, .c10, .c11, .c12 {
+                color: #D00169;
+                letter-spacing: -22px;
+            }
+            .c9::after, .c10::after, .c11::after, .c12::after {
+                border-color: transparent #D00169 transparent transparent;
+            }
+            .c9::before, .c10::before, .c11::before, .c12::before {
+                border-color: transparent transparent transparent #D00169;
+            }
+
+            /* Center */
+            .draw, .pile {
+                position: fixed;
+                bottom: calc((100% - 270px) / 2);
+                width: 180px;
+                height: 270px;
+                background-color: #ececec;
+                border: 10px solid #fff;
+                border-radius: 10px;
+                transition: all 0.3s;
+            }
+            .draw {
+                left: 20px;
+            }
+            .draw .card {
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+            .pile:nth-of-type(1) {
+                left: calc(180px + 50px);
+            }
+            .pile:nth-of-type(2) {
+                left: calc((2 * 180px) + 80px);
+            }
+            .pile:nth-of-type(3) {
+                left: calc((3 * 180px) + 110px);
+            }
+            .pile:nth-of-type(4) {
+                left: calc((4 * 180px) + 140px);
+            }
+            .pile .card, .stock .card, .discard-pile .card {
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+            .pile:before {
+                display: block;
+                content: 'Pile';
+                position: absolute;
+                top: 0;
+                left: 0;
+                color: #888;
+                font-size: 16px;
+                line-height: 270px;
+                text-align: center;
+                width: 100%;
+            }
+
+            /* Hand */
+            .hand {
+                position: fixed;
+                bottom: 0;
+                height: 270px;
+                width: calc((180px * 5) + (4 * 10px));
+                left: calc((100% - (180px * 5) - (4 * 10px)) / 2);
+                background-color: green;
+                padding: 10px;
+                border-radius: 10px 10px 0 0;
+            }
+            .hand .card {
+                float: left;
+                margin-right: 10px;
+            }
+            .hand .card:last-of-type {
+                margin-right: 0;
+            }           
+            .stock, .discard-pile {
+                position: fixed;
+                bottom: calc(270px + 30px);
+                right: 20px;
+                width: 180px;
+                height: 270px;
+                background-color: #ececec;
+                border: 10px solid #fff;
+                border-radius: 10px;
+            }
+            .discard-pile:nth-of-type(1) {
+                right: calc(180px + 50px);
+            }
+            .discard-pile:nth-of-type(2) {
+                right: calc((2 * 180px) + 80px);
+            }
+            .discard-pile:nth-of-type(3) {
+                right: calc((3 * 180px) + 110px);
+            }
+            .discard-pile:nth-of-type(4) {
+                right: calc((4 * 180px) + 140px);
+            }
+            .discard-pile:before {
+                display: block;
+                content: 'Discard pile';
+                position: absolute;
+                top: 0;
+                left: 0;
+                color: #888;
+                font-size: 16px;
+                line-height: 270px;
+                text-align: center;
+                width: 100%;
+            }
+
+            /* Card drop animation */
+            .drop {
+                filter: brightness(120%);
+            }
+        </style>
+    </head>
+    <body>
+
+        <section id="piles">
+            <div class="pile"></div>
+            <div class="pile"></div>
+            <div class="pile"></div>
+            <div class="pile"></div>
+        </section>
+        
+
+        <div class="draw"></div>
+
+        <div class="hand"></div>
+
+        <section id="discard-piles">
+            <div class="discard-pile"></div>
+            <div class="discard-pile"></div>
+            <div class="discard-pile"></div>
+            <div class="discard-pile"></div>
+        </section>
+       
+
+        <div class="stock"></div>
+
+        <script type="text/javascript">
+
+            var cards = [];
+
+            document.addEventListener('dragstart',function(e){
+                if (e.target && e.target.classList.contains('card')){
+                    e.dataTransfer.setData('text', e.target.id);
+                    e.dataTransfer.setData('card', e.target.innerText);
+                }
+            });
+
+            var decks = document.querySelectorAll('.pile,.discard-pile');
+            Array.from(decks).forEach(deck => {
+
+                deck.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    if (!e.target.classList.contains('card')) {
+                        e.target.classList.add('drop');
+                    }
+                });
+
+                deck.addEventListener('drop', function(e) {
+
+                    var piles = document.querySelectorAll('.drop');
+                    Array.from(piles).forEach(pile => {
+                        pile.classList.remove('drop');
+                    })
+
+                    e.preventDefault();                 
+                    var data = e.dataTransfer.getData('text');
+                    var card = e.dataTransfer.getData('card');
+                    var topCard = '';
+                    var pile = e.target;
+
+                    if (e.target.classList.contains('card')) {
+                        pile = e.target.parentElement;                                                               
+                    }
+
+                    if (pile.classList.contains('discard-pile')) {
+                        pile.appendChild(document.getElementById(data)); 
+                        return;
+                    }
+                    if (isValid(getTopCard(pile), card)) {
+                        pile.appendChild(document.getElementById(data)); 
+                    } 
+                    else {
+                        return false; // Not a valid move
+                    }  
+
+                    // Clear pile
+                    if (card == 12) {
+                        while (pile.firstChild) {
+                            pile.removeChild(pile.firstChild);
+                        }
+                    }
+
+                    // Empty hand
+                    if (document.querySelector('.hand').children.length < 1) {
+                        /// TODO
+                    }
+
+                });
+
+            });
+
+            function getTopCard(pile) {
+                if (pile.children.length > 0) {
+                    return pile.children[pile.children.length - 1].innerText;
+                }
+                return null;
+            }
+
+            function isValid(bottom, top) {
+                if ((!bottom && top == 1) || (!bottom && top == 'wildcard')) {
+                    return true;
+                }
+                else if ((parseInt(bottom) > 0 && top == parseInt(bottom) + 1) || (parseInt(bottom) > 0 && top == 'wildcard')) {
+                    return true;
+                }
+                return false;
+            }
+
+            function generateCards() {
+
+                cards = [];
+
+                for (var i = 0; i < 12; i++) {
+                    for (var n = 1; n <= 12; n++) {
+                        var card = {
+                            nr: n,
+                            id: i * 12 + n - 1
+                        }
+                        cards.push(card);
+                    }
+                }
+
+                for (var i = 0; i < 18; i++) {
+                    var card = {
+                        nr: 'wildcard',
+                        id: 144 + i
+                    }
+                    cards.push(card);
+                }
+
+            }
+
+            function shuffle(a) {
+                for (let i = a.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [a[i], a[j]] = [a[j], a[i]];
+                }
+                return a;
+            }
+
+            function deal() {
+                shuffle(cards);
+                for (var i = 0; i < 5; i++) {
+                    addToHand(cards.pop());
+                } 
+                for (var i = 0; i < 30; i++) {
+                    addToStock(cards.pop());
+                }
+                while (cards.length > 0) {
+                    addToDraw(cards.pop());
+                }
+            }
+
+            function addToHand(card) {
+                document.querySelector('.hand').innerHTML += '<div class="card c'+card.nr+'" draggable="true" id="'+card.id+'">'+card.nr+'</div>';
+            } 
+
+            function addToStock(card) {
+                document.querySelector('.stock').innerHTML += '<div class="card c'+card.nr+'" draggable="true" id="'+card.id+'">'+card.nr+'</div>';
+            }
+
+            function addToDraw(card) {
+                document.querySelector('.draw').innerHTML += '<div class="card c'+card.nr+'" draggable="true" id="'+card.id+'">'+card.nr+'</div>';
+            }
+
+            generateCards();
+            deal();
+
+        </script>
+
+    </body>
+</html>
