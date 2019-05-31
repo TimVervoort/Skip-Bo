@@ -260,7 +260,7 @@
                         pile.appendChild(document.getElementById(data)); 
                         return;
                     }
-                    if (isValid(getTopCard(pile), card)) {
+                    if (isValid(pile, card)) {
                         pile.appendChild(document.getElementById(data)); 
                     } 
                     else {
@@ -268,7 +268,7 @@
                     }  
 
                     // Clear pile
-                    if (card == 12) {
+                    if (card == 12 || (card == 'wildcard' && pile.children.length == 12)) {
                         while (pile.firstChild) {
                             pile.removeChild(pile.firstChild);
                         }
@@ -290,8 +290,12 @@
                 return null;
             }
 
-            function isValid(bottom, top) {
+            function isValid(pile, top) {
+                var bottom = getTopCard(pile);
                 if ((!bottom && top == 1) || (!bottom && top == 'wildcard')) {
+                    return true;
+                }
+                else if (bottom == 'wildcard' && pile.children.length + 1 == top) {
                     return true;
                 }
                 else if ((parseInt(bottom) > 0 && top == parseInt(bottom) + 1) || (parseInt(bottom) > 0 && top == 'wildcard')) {

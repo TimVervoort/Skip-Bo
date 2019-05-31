@@ -8,3 +8,4 @@ The popular Skip-Bo game from Mattel in HTML, CSS and plain JavaScript. No copyr
 - AI opponent
 - Wrong move feedback
 - Responsive design
+- Display number on wildcard
